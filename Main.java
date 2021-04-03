@@ -1,72 +1,181 @@
-package com.company;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.util.Random;
-import java.util.concurrent.TimeUnit;
 import javax.swing.*;
-import java.util.concurrent.TimeUnit;
+import java.awt.*;
 
-public class Main {
+public class Main extends JFrame {
+    static double[][] points = {{20, 20}, {100, 20}, {20, 100}, {50, 50}};
 
-    public static class obj extends JComponent  {
-        @Override
-        public void paint(Graphics g) {
-            super.paint(g);
-            int n = 10, maxheight = 50, minheight = 500, maxarc=40, minarc = 740, xheight=0, xarc = 0;
-            for (int i = 0; i<n;i++)
-            {
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                Random rand = new Random();
-                float r = (float) (rand.nextFloat()/2f+0.5f );
-                float ggg = (float) (rand.nextFloat()/ 2f);
-                float b = (float) (rand.nextFloat()/ 2f);
-                Color randomColor = new Color(r, ggg, b);
-                xheight = maxheight + (int) (Math.random() * ((minheight - maxheight) + 1));
-                xarc = maxarc + (int) (Math.random() * ((minarc - maxarc) + 1));
-                g.setColor(randomColor);
-                g.drawLine(xarc, xheight, 330, 700);
-                g.fillOval(xarc, xheight - 10, 8, 8);
-                for (int gg = 0; gg < 90; gg++)
-                {
-                    int randomplacex = (xarc+40) + (int) (Math.random() * (((xarc - 40) - (xarc+40) + 1)));
-                    int randonplacey = (xheight+40) + (int) (Math.random() * (((xheight - 40) - (xheight+40) + 1)));
-                    g.setColor(randomColor.brighter().brighter());
-                    g.fillOval(randomplacex, randonplacey, 8, 8);
-                }
-                for(int gg2 = 0; gg2 < 60; gg2++)
-                {
-                    g.setColor(randomColor.brighter());
-                    int randomplacex1 = (xarc+40+20) + (int) (Math.random() * (((xarc - 40-20) - (xarc+40+20) + 1)));
-                    int randonplacey1 = (xheight+40+20) + (int) (Math.random() * (((xheight - 40-20) - (xheight+40+20) + 1)));
-                    g.fillOval(randomplacex1, randonplacey1, 9, 9);
-                }
-                for(int gg3 = 0; gg3 < 30; gg3++)
-                {
-                    g.setColor(randomColor);
-                    int randomplacex2 = (xarc+40+40) + (int) (Math.random() * (((xarc - 40-40) - (xarc+40+40) + 1)));
-                    int randonplacey2 = (xheight+40+40) + (int) (Math.random() * (((xheight - 40-40) - (xheight+40+40) + 1)));
-                    g.fillOval(randomplacex2, randonplacey2, 10, 10);
+    private final int wndWidth = 800, wndHeight = 600;
+
+    public Main() {
+        super("Window");
+        setSize(wndWidth, wndHeight);
+        setResizable(false);
+        setBackground(Color.WHITE);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+    }
+
+    @Override
+    public void paint(Graphics g) {
+        super.paint(g);
+        Graphics2D gr = (Graphics2D) g;
+        gr.setColor(Color.WHITE);
+        gr.fillRect(0, 0, this.getWidth(), this.getHeight());
+        gr.setStroke(new BasicStroke(2));
+        gr.setColor(Color.BLACK);
+        gr.drawLine(0, wndHeight / 2, wndWidth, wndHeight / 2);
+        gr.drawLine(wndWidth / 2, 0, wndWidth / 2, wndHeight);
+        gr.setStroke(new BasicStroke(1));
+        int buf = 10;
+        while (buf < wndHeight) {
+            gr.drawLine(wndWidth / 2 - 3, buf, wndWidth / 2 + 3, buf);
+            buf += 10;
+        }
+        buf = 10;
+        while (buf < wndWidth) {
+            gr.drawLine(buf, wndHeight / 2 - 3, buf, wndHeight / 2 + 3);
+            buf += 10;
+        }
+        drawF(points, gr);
+    }
+
+    public static double[][] movePts(/*int[][] points, */int dx, int dy) {
+        double[][] T = {{1, 0, 0}, {0, 1, 0}, {dx, dy, 1}};
+        for (int i = 0; i < points.length; i++) {
+            double point[][] = {{points[i][0], points[i][1], 1}};
+            double p[][] = multiplyByMatrix(point, T);
+            points[i][0] = p[0][0];
+            points[i][1] = p[0][1];
+        }
+        return points;
+    }
+
+    public static double[][] scalePts(/*int[][] points, */int Sx, int Sy) {
+        double[][] S = {{Sx, 0, 0}, {0, Sy, 0}, {0, 0, 1}};
+        for (int i = 0; i < points.length; i++) {
+            double point[][] = {{points[i][0], points[i][1], 1}};
+            double p[][] = multiplyByMatrix(point, S);
+            points[i][0] = p[0][0];
+            points[i][1] = p[0][1];
+        }
+        return points;
+    }
+
+    public static double[][] scalePtsR(/*int[][] points, */double Sx, double Sy, int x, int y) {
+        double[][] S = {
+                {Sx, 0, 0},
+                {0, Sy, 0},
+                {0, 0, 1}};
+        double[][] T = {{1, 0, 0}, {0, 1, 0}, {-x, -y, 1}};
+        double[][] T1 = {{1, 0, 0}, {0, 1, 0}, {x, y, 1}};
+        double[][] S1 = multiplyByMatrix(T, S);
+        S1 = multiplyByMatrix(S1, T1);
+        for (int i = 0; i < points.length; i++) {
+            double point[][] = {{points[i][0], points[i][1], 1}};
+            double p[][] = multiplyByMatrix(point, S1);
+            points[i][0] = p[0][0];
+            points[i][1] = p[0][1];
+        }
+        return points;
+    }
+
+    public static double[][] turnPts(/*int[][] points, */double a) {
+        double[][] R = {{(int) Math.cos(a), (int) Math.sin(a), 0}, {(int) -Math.sin(a), (int) Math.cos(a), 0}, {0, 0, 1}};
+        for (int i = 0; i < points.length; i++) {
+            double point[][] = {{points[i][0], points[i][1], 1}};
+            double p[][] = multiplyByMatrix(point, R);
+            points[i][0] = p[0][0];
+            points[i][1] = p[0][1];
+        }
+        return points;
+    }
+
+    public static double[][] turnPtsR(/*int[][] points, */double a, int x, int y) {
+        double[][] R = {{Math.cos(a), Math.sin(a), 0},
+                {-Math.sin(a), Math.cos(a), 0},
+                {0, 0, 1}};
+        double[][] T = {{1, 0, 0}, {0, 1, 0}, {-x, -y, 1}};
+        double[][] T1 = {{1, 0, 0}, {0, 1, 0}, {x, y, 1}};
+        double[][] R1 = multiplyByMatrix(T, R);
+        R1 = multiplyByMatrix(R1, T1);
+        for (int i = 0; i < points.length; i++) {
+            double point[][] = {{points[i][0], points[i][1], 1}};
+            double p[][] = multiplyByMatrix(point, R1);
+            points[i][0] = p[0][0];
+            points[i][1] = p[0][1];
+        }
+        return points;
+    }
+
+    public void drawF(double[][] points, Graphics2D gr) {
+        for (int i = 0; i < points.length - 1; i++) {
+            gr.drawLine((int) (wndWidth / 2 + points[i][0]), (int) (wndHeight / 2 - points[i][1]),
+                    (int) (wndWidth / 2 + points[i + 1][0]), (int) (wndHeight / 2 - points[i + 1][1]));
+        }
+        gr.drawLine((int) (wndWidth / 2 + points[points.length - 1][0]), (int) (wndHeight / 2 - points[points.length - 1][1]),
+                (int) (wndWidth / 2 + points[0][0]), (int) (wndHeight / 2 - points[0][1]));
+    }
+
+    public static double[][] multiplyByMatrix(double[][] m1, double[][] m2) {
+        int m1ColLength = m1[0].length; // m1 columns length
+        int m2RowLength = m2.length;    // m2 rows length
+        if (m1ColLength != m2RowLength) return null; // matrix multiplication is not possible
+        int mRRowLength = m1.length;    // m result rows length
+        int mRColLength = m2[0].length; // m result columns length
+        double[][] mResult = new double[mRRowLength][mRColLength];
+        for (int i = 0; i < mRRowLength; i++) {         // rows from m1
+            for (int j = 0; j < mRColLength; j++) {     // columns from m2
+                for (int k = 0; k < m1ColLength; k++) { // columns from m1
+                    mResult[i][j] += m1[i][k] * m2[k][j];
                 }
             }
         }
+        return mResult;
     }
+
     public static void main(String[] args) {
-        // write your code here
-        JFrame frame = new JFrame("Фрактал");
-        frame.setVisible(true);
-        frame.setSize(700,700);
-        obj RR = new obj();
-        frame.add(RR);
-        while (true){
-            frame.repaint();
+//        Scanner s = new Scanner(System.in);
+//        int ptCount = s.nextInt();
+//        points = new int[ptCount][2];
+//        for (int i = 0; i < ptCount; i++) {
+//            System.out.println("x" + (i + 1));
+//            points[i][0] = s.nextInt();
+//            System.out.println("y" + (i + 1));
+//            points[i][1] = s.nextInt();
+//        }
+
+        Main m = new Main();
+        m.setVisible(true);
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+//        System.out.println("enter angle");
+//        double buf = s.nextDouble();
+        turnPtsR(Math.PI / 3, 20, 20);
+        m.repaint();
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+//        System.out.println("enter Sx");
+//        buf = s.nextDouble();
+//        System.out.println("enter Sy");
+//        buf = s.nextDouble();
+        scalePtsR(2, 2, 20, 20);
+        m.repaint();
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+//        System.out.println("enter dx");
+//        int buf1 = s.nextInt();
+//        System.out.println("enter dy");
+//        buf1 = s.nextInt();
+        movePts(100, 0);
+        m.repaint();
     }
 }
-
