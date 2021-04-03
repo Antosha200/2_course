@@ -1,1 +1,1 @@
-# 2_course
+# Lab_2_Noscova
